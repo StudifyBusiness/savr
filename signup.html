@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Studify</title>
+    <script defer type="module" src="script.js"></script>
+    <style>
+        #home-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <button id="home-btn" onclick="window.location.href='index.html'">Go to Home</button>
+    
+    <h2>Sign Up</h2>
+    <input type="email" id="signup-email" placeholder="Email">
+    <input type="password" id="signup-password" placeholder="Password">
+    <button id="signup-btn">Sign Up</button>
+    <p id="signup-error" style="color:red;"></p>
+    
+    <p>Already have an account? <a href="login.html">Log in</a></p>
+
+    <script>
+        document.getElementById("signup-btn").addEventListener("click", () => {
+            const email = document.getElementById("signup-email").value;
+            const password = document.getElementById("signup-password").value;
+            window.signUp(email, password);
+        });
+    </script>
+</body>
+</html>

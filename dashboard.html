@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Studify</title>
+    <script defer type="module" src="script.js"></script>
+</head>
+<body>
+    <h2>Welcome to Your Dashboard</h2>
+    <p>You are logged in!</p>
+    <button id="logout-btn">Logout</button>
+
+    <script type="module">
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const auth = getAuth();
+
+        // Check authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "login.html"; // Redirect to login if not authenticated
+            }
+        });
+
+        // Ensure logout function properly signs out
+        document.getElementById("logout-btn").addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                console.log("User successfully logged out");
+                alert("Logged out successfully!");
+                window.location.href = "index.html"; // Redirect after logging out
+            } catch (error) {
+                console.error("Error logging out:", error.message);
+                alert("Error logging out: " + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
