@@ -3,12 +3,12 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBH8aAKoyjGyMB8Cu_vzY4YuNgaaNmA5ec",
-  authDomain: "studify-d2fbc.firebaseapp.com",
-  projectId: "studify-d2fbc",
-  storageBucket: "studify-d2fbc.firebasestorage.app",
-  messagingSenderId: "857227078095",
-  appId: "1:857227078095:web:4afd99e714e7ef471ecaba",
+  apiKey: "AIzaSyBG8yfuYYzUULnakekTxd9iU7sw8FAZ3Ys",
+  authDomain: "savr-a44c4.firebaseapp.com",
+  projectId: "savr-a44c4",
+  storageBucket: "savr-a44c4.firebasestorage.app",
+  messagingSenderId: "356768241145",
+  appId: "1:356768241145:web:adccc20d86edfddb66d928",
 };
 
 // Initialize Firebase
