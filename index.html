@@ -3,61 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Savr Prototype</title>
+    <title>Savr - Find Stores with Your Ingredients</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-        input, button { margin: 10px; padding: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+        }
+        #results {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
+
     <h1>Savr - Find Stores with Your Ingredients</h1>
-    <input type="text" id="ingredient" placeholder="Enter an ingredient">
-    <input type="text" id="location" placeholder="Enter your location">
+    <input type="text" id="ingredient" placeholder="Enter ingredient">
+    <input type="text" id="location" placeholder="Enter location (city, ZIP, etc.)">
     <button onclick="findStores()">Find Stores</button>
+    
+    <p id="status">Enter an ingredient and location to start.</p>
     <div id="results"></div>
 
     <script>
-        const API_KEY = 'AIzaSyAWq40HT381aTyKUoEycGI_fj9EfnD1U_k'; // Replace with your actual API key
+        async function findStores() {
+            const ingredient = document.getElementById("ingredient").value;
+            const location = document.getElementById("location").value;
+            const statusEl = document.getElementById("status");
+            const resultsEl = document.getElementById("results");
 
-        function findStores() {
-            const ingredient = document.getElementById('ingredient').value;
-            const location = document.getElementById('location').value;
-            
             if (!ingredient || !location) {
-                alert('Please enter both an ingredient and a location.');
+                statusEl.innerText = "Please enter both an ingredient and a location.";
                 return;
             }
-            
-            document.getElementById('results').innerHTML = `Searching for stores near ${location} that may have ${ingredient}...`;
-            
-            fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK') {
-                        const { lat, lng } = data.results[0].geometry.location;
-                        searchNearbyStores(lat, lng);
-                    } else {
-                        document.getElementById('results').innerHTML = 'Location not found.';
-                    }
-                })
-                .catch(error => console.error('Geocoding error:', error));
-        }
 
-        function searchNearbyStores(lat, lng) {
-            const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=grocery_or_supermarket&key=${API_KEY}`;
-            
-            fetch(placesUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'OK') {
-                        let stores = data.results.map(store => `<p>${store.name} - ${store.vicinity}</p>`).join('');
-                        document.getElementById('results').innerHTML = stores || 'No stores found nearby.';
-                    } else {
-                        document.getElementById('results').innerHTML = 'No stores found.';
-                    }
-                })
-                .catch(error => console.error('Places API error:', error));
+            statusEl.innerText = `Searching for stores near ${location} that may have ${ingredient}...`;
+            resultsEl.innerHTML = "";
+
+            try {
+                // Step 1: Convert location to latitude/longitude
+                const geoResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=AIzaSyAWq40HT381aTyKUoEycGI_fj9EfnD1U_k`);
+                const geoData = await geoResponse.json();
+                
+                if (geoData.status !== "OK") {
+                    throw new Error("Location not found.");
+                }
+
+                const { lat, lng } = geoData.results[0].geometry.location;
+
+                // Step 2: Search for nearby grocery stores
+                const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=grocery_or_supermarket&key=AIzaSyAWq40HT381aTyKUoEycGI_fj9EfnD1U_k`;
+                const placesResponse = await fetch(placesUrl);
+                const placesData = await placesResponse.json();
+
+                console.log("Places API Response:", placesData); // Debugging
+
+                if (placesData.status !== "OK") {
+                    throw new Error("No stores found.");
+                }
+
+                // Step 3: Display store results
+                resultsEl.innerHTML = placesData.results.map(store => 
+                    `<p><strong>${store.name}</strong><br>${store.vicinity}</p>`
+                ).join("") || "No stores found nearby.";
+
+                statusEl.innerText = `Found ${placesData.results.length} stores near ${location}.`;
+
+            } catch (error) {
+                console.error("Error:", error);
+                statusEl.innerText = "Error fetching store data. Try again.";
+            }
         }
     </script>
+
 </body>
 </html>
