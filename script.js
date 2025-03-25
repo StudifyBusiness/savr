@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -14,6 +15,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 // Function to handle sign-up
 window.signUp = function (email, password) {
@@ -21,11 +23,11 @@ window.signUp = function (email, password) {
         .then((userCredential) => {
             console.log("User signed up:", userCredential.user);
             alert("Account created! Redirecting to login...");
-            window.location.href = "login.html"; // Redirect to login page
+            window.location.href = "login.html";
         })
         .catch((error) => {
             console.error("Error signing up:", error.message);
-            document.getElementById("signup-error").innerText = error.message; // Show error message
+            document.getElementById("signup-error").innerText = error.message;
         });
 };
 
@@ -35,11 +37,11 @@ window.login = function (email, password) {
         .then((userCredential) => {
             console.log("User logged in:", userCredential.user);
             alert("Login successful! Redirecting to dashboard...");
-            window.location.href = "dashboard.html"; // Redirect to dashboard
+            window.location.href = "dashboard.html";
         })
         .catch((error) => {
             console.error("Error logging in:", error.message);
-            document.getElementById("login-error").innerText = error.message; // Show error message
+            document.getElementById("login-error").innerText = error.message;
         });
 };
 
@@ -49,7 +51,7 @@ window.logout = function () {
         .then(() => {
             console.log("User logged out");
             alert("Logged out successfully!");
-            window.location.href = "index.html"; // Redirect to home
+            window.location.href = "index.html";
         })
         .catch((error) => {
             console.error("Error logging out:", error.message);
@@ -57,24 +59,45 @@ window.logout = function () {
         });
 };
 
-// Authentication state listener (Protect dashboard.html)
+// Authentication state listener
 onAuthStateChanged(auth, (user) => {
     if (window.location.pathname.includes("dashboard.html")) {
         if (!user) {
-            window.location.href = "login.html"; // Redirect if not logged in
+            window.location.href = "login.html";
         }
     }
 });
 
-// Grocery List Handling
-window.addGroceryItem = function () {
+// Grocery List Functions
+window.addGroceryItem = async function () {
     const itemInput = document.getElementById("grocery-item");
-    const list = document.getElementById("grocery-list");
+    const itemName = itemInput.value.trim();
+    if (!itemName) return;
     
-    if (itemInput.value.trim() !== "") {
-        const listItem = document.createElement("li");
-        listItem.textContent = itemInput.value;
-        list.appendChild(listItem);
+    try {
+        await addDoc(collection(db, "grocery-list"), { name: itemName });
+        console.log("Item added:", itemName);
         itemInput.value = "";
+        fetchGroceryList();
+    } catch (error) {
+        console.error("Error adding grocery item:", error);
     }
 };
+
+window.fetchGroceryList = async function () {
+    const listContainer = document.getElementById("grocery-list");
+    listContainer.innerHTML = "";
+    
+    const querySnapshot = await getDocs(collection(db, "grocery-list"));
+    querySnapshot.forEach((doc) => {
+        const listItem = document.createElement("li");
+        listItem.textContent = doc.data().name;
+        listContainer.appendChild(listItem);
+    });
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("grocery-list")) {
+        fetchGroceryList();
+    }
+});
