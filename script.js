@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // Firebase configuration
@@ -17,87 +17,60 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Function to handle sign-up
-window.signUp = function (email, password) {
-    createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            console.log("User signed up:", userCredential.user);
-            alert("Account created! Redirecting to login...");
-            window.location.href = "login.html";
-        })
-        .catch((error) => {
-            console.error("Error signing up:", error.message);
-            document.getElementById("signup-error").innerText = error.message;
-        });
-};
+// Grocery list logic
+const groceryInput = document.getElementById("grocery-input");
+const addGroceryBtn = document.getElementById("add-grocery-btn");
+const groceryList = document.getElementById("grocery-list");
 
-// Function to handle login
-window.login = function (email, password) {
-    signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            console.log("User logged in:", userCredential.user);
-            alert("Login successful! Redirecting to dashboard...");
-            window.location.href = "dashboard.html";
-        })
-        .catch((error) => {
-            console.error("Error logging in:", error.message);
-            document.getElementById("login-error").innerText = error.message;
-        });
-};
-
-// Function to handle logout
-window.logout = function () {
-    signOut(auth)
-        .then(() => {
-            console.log("User logged out");
-            alert("Logged out successfully!");
-            window.location.href = "index.html";
-        })
-        .catch((error) => {
-            console.error("Error logging out:", error.message);
-            alert(error.message);
-        });
-};
-
-// Authentication state listener
-onAuthStateChanged(auth, (user) => {
-    if (window.location.pathname.includes("dashboard.html")) {
-        if (!user) {
-            window.location.href = "login.html";
-        }
-    }
-});
-
-// Grocery List Functions
-window.addGroceryItem = async function () {
-    const itemInput = document.getElementById("grocery-item");
-    const itemName = itemInput.value.trim();
-    if (!itemName) return;
+async function addGroceryItem() {
+    const item = groceryInput.value.trim();
+    if (item === "") return;
     
     try {
-        await addDoc(collection(db, "grocery-list"), { name: itemName });
-        console.log("Item added:", itemName);
-        itemInput.value = "";
+        await addDoc(collection(db, "groceryItems"), { name: item });
+        groceryInput.value = "";
         fetchGroceryList();
     } catch (error) {
         console.error("Error adding grocery item:", error);
     }
-};
+}
 
-window.fetchGroceryList = async function () {
-    const listContainer = document.getElementById("grocery-list");
-    listContainer.innerHTML = "";
-    
-    const querySnapshot = await getDocs(collection(db, "grocery-list"));
-    querySnapshot.forEach((doc) => {
-        const listItem = document.createElement("li");
-        listItem.textContent = doc.data().name;
-        listContainer.appendChild(listItem);
-    });
-};
+async function fetchGroceryList() {
+    groceryList.innerHTML = "";
+    try {
+        const querySnapshot = await getDocs(collection(db, "groceryItems"));
+        querySnapshot.forEach((doc) => {
+            const li = document.createElement("li");
+            li.textContent = doc.data().name;
+            groceryList.appendChild(li);
+        });
+    } catch (error) {
+        console.error("Error fetching grocery list:", error);
+    }
+}
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("grocery-list")) {
-        fetchGroceryList();
+// Event Listeners
+if (addGroceryBtn) {
+    addGroceryBtn.addEventListener("click", addGroceryItem);
+    fetchGroceryList();
+}
+
+// Authentication state listener (Protect pages if needed)
+onAuthStateChanged(auth, (user) => {
+    if (window.location.pathname.includes("dashboard.html") && !user) {
+        window.location.href = "login.html";
     }
 });
+
+// Logout function
+window.logout = async function () {
+    try {
+        await signOut(auth);
+        console.log("User logged out");
+        alert("Logged out successfully!");
+        window.location.href = "index.html";
+    } catch (error) {
+        console.error("Error logging out:", error);
+        alert(error.message);
+    }
+};
