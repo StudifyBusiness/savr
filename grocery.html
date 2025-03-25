@@ -3,51 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grocery List - Studify</title>
-    <script defer type="module" src="grocery.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-        input, button {
-            margin-top: 10px;
-            display: block;
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-        }
-        .list-container {
-            margin-top: 20px;
-        }
-        .list-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            background: #e3e3e3;
-            margin-top: 5px;
-            border-radius: 5px;
-        }
-    </style>
+    <title>Grocery List</title>
+    <script defer type="module" src="script.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h2>Create Your Grocery List</h2>
-        <input type="text" id="grocery-item" placeholder="Enter grocery item">
-        <button id="add-item">Add to List</button>
-        <div class="list-container" id="grocery-list"></div>
-        <button id="compare-prices">Compare Prices</button>
-        <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
-    </div>
+    <h1>Grocery Price Comparison</h1>
+    <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+    
+    <h2>Add Item</h2>
+    <input type="text" id="item-input" placeholder="Enter grocery item">
+    <button id="add-item-btn">Add to List</button>
+    
+    <h2>Your Grocery List</h2>
+    <ul id="grocery-list"></ul>
+    
+    <h2>Price Comparison</h2>
+    <button id="compare-prices-btn">Compare Prices</button>
+    <div id="price-results"></div>
+    
+    <script>
+        document.getElementById("add-item-btn").addEventListener("click", () => {
+            const itemInput = document.getElementById("item-input");
+            const itemName = itemInput.value.trim();
+            if (itemName) {
+                addItemToList(itemName);
+                itemInput.value = "";
+            }
+        });
+    </script>
 </body>
 </html>
