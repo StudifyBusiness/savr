@@ -3,43 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studify - Home</title>
-    <script defer type="module" src="script.js"></script>
+    <title>Savr Prototype</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        input, button { margin: 10px; padding: 10px; }
+    </style>
 </head>
 <body>
-    <h1>Welcome to Studify</h1>
-    <div id="auth-buttons">
-        <button onclick="window.location.href='signup.html'">Sign Up</button>
-        <button onclick="window.location.href='login.html'">Login</button>
-        <button id="dashboard-btn" style="display:none;" onclick="window.location.href='dashboard.html'">Go to Dashboard</button>
-        <button id="logout-btn" style="display:none;">Logout</button>
-    </div>
+    <h1>Savr - Find Stores with Your Ingredients</h1>
+    <input type="text" id="ingredient" placeholder="Enter an ingredient">
+    <input type="text" id="location" placeholder="Enter your location">
+    <button onclick="findStores()">Find Stores</button>
+    <div id="results"></div>
 
     <script>
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        const API_KEY = 'AIzaSyAWq40HT381aTyKUoEycGI_fj9EfnD1U_k'; // Replace with your actual API key
 
-        const auth = getAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is logged in
-                document.getElementById("dashboard-btn").style.display = "inline-block";
-                document.getElementById("logout-btn").style.display = "inline-block";
-            } else {
-                // No user logged in
-                document.getElementById("dashboard-btn").style.display = "none";
-                document.getElementById("logout-btn").style.display = "none";
+        function findStores() {
+            const ingredient = document.getElementById('ingredient').value;
+            const location = document.getElementById('location').value;
+            
+            if (!ingredient || !location) {
+                alert('Please enter both an ingredient and a location.');
+                return;
             }
-        });
+            
+            document.getElementById('results').innerHTML = `Searching for stores near ${location} that may have ${ingredient}...`;
+            
+            fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location)}&key=${API_KEY}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK') {
+                        const { lat, lng } = data.results[0].geometry.location;
+                        searchNearbyStores(lat, lng);
+                    } else {
+                        document.getElementById('results').innerHTML = 'Location not found.';
+                    }
+                })
+                .catch(error => console.error('Geocoding error:', error));
+        }
 
-        // Logout Function
-        document.getElementById("logout-btn").addEventListener("click", () => {
-            signOut(auth).then(() => {
-                window.location.reload(); // Refresh page after logout
-            }).catch((error) => {
-                console.error("Error logging out:", error.message);
-            });
-        });
+        function searchNearbyStores(lat, lng) {
+            const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=grocery_or_supermarket&key=${API_KEY}`;
+            
+            fetch(placesUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'OK') {
+                        let stores = data.results.map(store => `<p>${store.name} - ${store.vicinity}</p>`).join('');
+                        document.getElementById('results').innerHTML = stores || 'No stores found nearby.';
+                    } else {
+                        document.getElementById('results').innerHTML = 'No stores found.';
+                    }
+                })
+                .catch(error => console.error('Places API error:', error));
+        }
     </script>
 </body>
 </html>
